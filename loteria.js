@@ -12,7 +12,7 @@
 
   'use strict';
   var fn = function(n) {
-    var z = n.trim()
+    var z = n.trim().replace(/\s+/g, ' ')
     z = z.replace(/,/g, ' ')
     if (z.split(/ /).length == 1) {
       var newz = [];
@@ -65,7 +65,7 @@
     input2.onkeydown = function(ev) {
       if (ev.keyCode == 13) {
         var n = input2.value;
-        var xx = n.trim()
+        var xx = n.trim().replace(/\s+/g, ' ')
         var zz = xx.split(/\n/)
         var res = ""
         for (var mm = 0; mm < zz.length; mm++) {
