@@ -2,8 +2,8 @@
 // @name         loteria_multi
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  try to take over the world!
-// @author       You
+// @description  Adicionar multiplos jogos de uma unica vez
+// @author       Anderson Calixto
 // @match        https://www.loteriasonline.caixa.gov.br/silce-web/
 // @grant        none
 // ==/UserScript==
@@ -13,7 +13,6 @@
   'use strict';
 
   var initialize = function() {
-
     // deps
     var jqueryUI = document.createElement("script")
     jqueryUI.type = "text/javascript"
@@ -85,9 +84,23 @@
           )
         )
       )
-      alert(jogos)
+      alert(`adicionando ${jogos.length} jogos`)
       console.log(jogos)
       addMultiGames(jogos)
+    }
+    window.verificaRepetidos = function() {
+      var jogos = (
+        jQuery("#listajogos").val().replace(/[^0-9\t \n]/g, 'A').replace(/\t/g, ' ').replace(/[\n]+/g, '\n').trim()
+        	.split(/\n/).map(
+          	a=>a.replace(/(\s+|[\t]+)/g, ' ').split(/ /).map(a=>parseInt(a)
+          )
+        )
+      )
+      var checkIdxsEl = (arr, busca) => arr.reduce((a,e,i) => { if (e == busca) { a.push((i+1)) } return a }, [])
+      var arrJogosStr = jogos.map((a, idx) => ("" + a.sort(function(a, b) { return a - b }).map(z => new String(z).padStart(2, '00')).join(', ')))
+      let findDuplicates = arr => arr.filter((item, index) => arr.indexOf(item) != index)
+      var repetidosLinhas = findDuplicates(arrJogosStr).map((v,i,a) => (v + "    > Linhas: " + checkIdxsEl(arrJogosStr, v)))
+      alert(repetidosLinhas.join('\n'))
     }
     getGames()
 
@@ -105,10 +118,11 @@
       window.sucessolock = (avisoCarrinhoSucesso == "Aposta inserida no carrinho com sucesso.")
     }, 500)
     window.multipleDialog = function() {
-      jQuery("#dialog").dialog({title: "Multiplos jogos"})
+      jQuery("#dialog").dialog({title: "Multiplos jogos", width: 500, height: 400, minWidth: 500, minHeight: 400 })
       jQuery("#dialog").html(`
 <textarea id="listajogos"></textarea><br />
 <button type="submit" onclick="addListaJogos(); return false;">Adicionar Jogos</button>
+<button type="submit" onclick="verificaRepetidos(); return false;">Verifica repetidos</button>
 `)
     }
     var cssJQUI = document.createElement("style")
@@ -123,6 +137,14 @@
 }
 
 #hackInfo a:hover {
+  color: yellow;
+}
+
+#hackInfo .result {
+  background-color: black;
+  padding-left: 4px;
+  padding-right: 4px;
+  font-weight: bold;
   color: yellow;
 }
 
@@ -162,8 +184,8 @@
       var noCarrinho = $("#carrinho").text().trim()
       jQuery("#hackInfo .info").html(`
 				<b>Jogo</b>: ${titulo} ****
-				<b>Apostas na fila</b>: ${gamelist.length} ****
-				<b>Apostas no carrinho</b>: ${noCarrinho} ****
+				<b>Apostas na fila</b>: <span class="result">${gamelist.length}</span> ****
+				<b>Apostas no carrinho</b>: <span class="result">${noCarrinho}</span> ****
 				<b>Locked</b>: ${sucessolock} ****
 				`)
     }, 100)
@@ -204,7 +226,7 @@
       }, 1000)
     }
   }
-  
+
   var script = document.createElement("script");
   script.type = "text/javascript";
   script.innerHTML = "window.initializeHack = " + initialize.toString() + "; initializeHack();";
